@@ -1,0 +1,955 @@
+==========================================================================
+<--------CREATE DATABASE--------->
+==========================================================================
+
+mysql> CREATE DATABASE mobile_battery_health;
+Query OK, 1 row affected (0.02 sec)
+
+----------USE DATABASE----------
+
+mysql> USE mobile_battery_health;
+Database changed
+
+
+----------SHOW DATABASE----------
+
+mysql> SHOW DATABASES;
++------------------------+
+| Database               |
++------------------------+
+| mobile_battery_health  |
+| mysql                  |
+| sys                    |
++------------------------+
+12 rows in set (0.04 sec)
+
+===========================================================================================================================================================================================================================================
+
+==============================================================================
+<--------- CREATE REQUIRED TABLE--------->
+==============================================================================
+
+=====================
+TABLE 1 : USERS
+=====================
+mysql> CREATE TABLE users (
+    ->     user_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     name VARCHAR(100) NOT NULL,
+    ->     email VARCHAR(100) UNIQUE NOT NULL,
+    ->     phone VARCHAR(15),
+    ->     gender VARCHAR(10),
+    ->     join_date DATE
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+============================
+TABLE 2 : MOBILE_DEVICES
+============================
+
+mysql> CREATE TABLE mobile_devices (
+    ->     device_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     user_id INT NOT NULL,
+    ->     brand VARCHAR(50) NOT NULL,
+    ->     model VARCHAR(100) NOT NULL,
+    ->     os_type VARCHAR(30),
+    ->     purchase_date DATE,
+    ->     battery_capacity_mAh INT,
+    ->     color VARCHAR(30),
+    ->     serial_number VARCHAR(100) UNIQUE,
+    ->
+    ->     FOREIGN KEY (user_id) REFERENCES users(user_id)
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+
+=============================
+TABLE 3 : BATTERY_USAGE
+=============================
+
+mysql> CREATE TABLE battery_usage (
+    ->     usage_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     device_id INT NOT NULL,
+    ->     usage_date DATE NOT NULL,
+    ->     battery_start INT NOT NULL,
+    ->     battery_end INT NOT NULL,
+    ->     screen_time_hours DECIMAL(4,2),
+    ->     battery_consumed INT,
+    ->
+    ->     FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id),
+    ->
+    ->     CHECK (battery_start BETWEEN 0 AND 100),
+    ->     CHECK (battery_end BETWEEN 0 AND 100),
+    ->     CHECK (battery_end <= battery_start),
+    ->     CHECK (screen_time_hours >= 0)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+
+=============================
+TABLE 4 : CHARGING_SESSIONS
+=============================
+
+mysql> CREATE TABLE charging_sessions (
+    ->     charging_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     device_id INT NOT NULL,
+    ->     charging_date DATE NOT NULL,
+    ->     start_percentage INT NOT NULL,
+    ->     end_percentage INT NOT NULL,
+    ->     charging_duration_minutes INT,
+    ->     charging_type VARCHAR(30),
+    ->
+    ->     FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id),
+    ->
+    ->     CHECK (start_percentage BETWEEN 0 AND 100),
+    ->     CHECK (end_percentage BETWEEN 0 AND 100),
+    ->     CHECK (end_percentage > start_percentage),
+    ->     CHECK (charging_duration_minutes > 0)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+
+============================
+TABLE 5 : BATTERY_HEALTH
+============================
+
+mysql> CREATE TABLE battery_health (
+    ->     health_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     device_id INT NOT NULL,
+    ->     check_date DATE NOT NULL,
+    ->     health_percentage DECIMAL(5,2) NOT NULL,
+    ->     maximum_capacity_mAh INT,
+    ->     charging_cycles INT,
+    ->     health_status VARCHAR(30),
+    ->
+    ->     FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id),
+    ->
+    ->     CHECK (health_percentage BETWEEN 0 AND 100),
+    ->     CHECK (maximum_capacity_mAh > 0),
+    ->     CHECK (charging_cycles >= 0)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+========================
+TABLE 6 : APP_ USAGE
+========================
+
+mysql> CREATE TABLE app_usage (
+    ->     app_usage_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     device_id INT NOT NULL,
+    ->     usage_date DATE NOT NULL,
+    ->     app_name VARCHAR(100) NOT NULL,
+    ->     usage_minutes INT,
+    ->     battery_consumed_percentage DECIMAL(5,2),
+    ->
+    ->     FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id),
+    ->
+    ->     CHECK (usage_minutes >= 0),
+    ->     CHECK (battery_consumed_percentage BETWEEN 0 AND 100)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+
+===========================
+TABLE 7 : BATTERY_ISSUES
+===========================
+
+mysql> CREATE TABLE battery_issues (
+    ->     issue_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     device_id INT NOT NULL,
+    ->     issue_date DATE NOT NULL,
+    ->     issue_type VARCHAR(100) NOT NULL,
+    ->     severity VARCHAR(20) NOT NULL,
+    ->     description VARCHAR(255),
+    ->
+    ->     FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id),
+    ->
+    ->     CHECK (severity IN ('Low', 'Medium', 'High', 'Critical'))
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+
+
+--------------CHECK TABLES---------------
+
+mysql> show tables;
++---------------------------------+
+| Tables_in_mobile_battery_health |
++---------------------------------+
+| app_usage                       |
+| battery_health                  |
+| battery_issues                  |
+| battery_usage                   |
+| charging_sessions               |
+| mobile_devices                  |
+| users                           |
++---------------------------------+
+
+
+===========================================================================================================================================================================================================================================
+
+=========================================================================
+<--------------INSERTING DATA INTO EACH TABLE-------------->
+=========================================================================
+
+INSERT INTO USERS
+=======================
+
+mysql>mysql> INSERT INTO users (name, email, phone, gender, join_date)
+    -> VALUES
+    -> ('Dinesh', 'dinesh@gmail.com', '9876543210', 'Male', '2026-08-01'),
+    -> ('Rahul', 'rahul@gmail.com', '9876543211', 'Male', '2026-08-02'),
+    -> ('Priya', 'priya@gmail.com', '9876543212', 'Female', '2026-08-03'),
+    -> ('Arjun', 'arjun@gmail.com', '9876543213', 'Male', '2026-08-04'),
+    -> ('Sneha', 'sneha@gmail.com', '9876543214', 'Female', '2026-08-05');
+Query OK, 5 rows affected (0.02 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+INSERT INTO MOBILE_DEVICES
+==============================
+
+mysql> INSERT INTO mobile_devices
+    -> (user_id, brand, model, os_type, purchase_date, battery_capacity_mAh, color, serial_number)
+    -> VALUES
+    -> (1, 'iQOO', 'Z10', 'Android', '2026-01-15', 7300, 'Black', 'IQZ10SN001'),
+    -> (2, 'Samsung', 'Galaxy S24', 'Android', '2025-12-10', 4000, 'Blue', 'SGS24SN002'),
+    -> (3, 'Apple', 'iPhone 15', 'iOS', '2025-11-20', 3349, 'Pink', 'IPH15SN003'),
+    -> (4, 'OnePlus', '12R', 'Android', '2026-02-05', 5500, 'Grey', 'OP12RSN004'),
+    -> (5, 'Google', 'Pixel 8', 'Android', '2025-10-15', 4575, 'Hazel', 'GP8SN005');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+INSERT INTO CHARGING_SESSIONS
+================================
+
+mysql> INSERT INTO charging_sessions
+    -> (device_id, charging_date, start_percentage, end_percentage,
+    ->  charging_duration_minutes, charging_type)
+    -> VALUES
+    -> (1, '2026-08-20', 20, 90, 55, 'Fast'),
+    -> (1, '2026-08-21', 15, 85, 52, 'Fast'),
+    -> (1, '2026-08-22', 20, 80, 50, 'Fast'),
+    -> (2, '2026-08-20', 30, 90, 70, 'Normal'),
+    -> (2, '2026-08-21', 25, 85, 68, 'Normal'),
+    -> (3, '2026-08-20', 35, 95, 80, 'Fast'),
+    -> (3, '2026-08-21', 40, 90, 75, 'Fast'),
+    -> (4, '2026-08-20', 20, 90, 60, 'Fast'),
+    -> (4, '2026-08-21', 15, 85, 58, 'Fast'),
+    -> (5, '2026-08-20', 25, 90, 75, 'Normal');
+Query OK, 10 rows affected (0.01 sec)
+Records: 10  Duplicates: 0  Warnings: 0
+
+INSERT INTO BATTERY_USAGE
+================================
+
+mysql> INSERT INTO battery_usage
+    -> (device_id, usage_date, battery_start, battery_end, screen_time_hours, battery_consumed)
+    -> VALUES
+    -> (1, '2026-08-20', 100, 30, 7.50, 70),
+    -> (1, '2026-08-21', 100, 25, 8.20, 75),
+    -> (1, '2026-08-22', 95, 20, 8.00, 75),
+    -> (2, '2026-08-20', 100, 40, 6.00, 60),
+    -> (2, '2026-08-21', 100, 35, 6.50, 65),
+    -> (3, '2026-08-20', 100, 45, 5.50, 55),
+    -> (3, '2026-08-21', 100, 40, 6.00, 60),
+    -> (4, '2026-08-20', 100, 30, 7.00, 70),
+    -> (4, '2026-08-21', 100, 25, 7.80, 75),
+    -> (5, '2026-08-20', 100, 35, 6.20, 65);
+Query OK, 10 rows affected (0.01 sec)
+Records: 10  Duplicates: 0  Warnings: 0
+
+INSERT INTO BATTERY_ISSUES
+====================================
+
+mysql> INSERT INTO battery_issues
+    -> (device_id, issue_date, issue_type, severity, description)
+    -> VALUES
+    -> (1, '2026-08-20', 'Fast Battery Drain', 'Medium',
+    ->  'Battery percentage decreases quickly during normal usage'),
+    ->
+    -> (2, '2026-08-21', 'Overheating', 'High',
+    ->  'Device becomes hot during charging'),
+    ->
+    -> (3, '2026-08-22', 'Slow Charging', 'Medium',
+    ->  'Charging takes longer than expected'),
+    ->
+    -> (4, '2026-08-23', 'Fast Battery Drain', 'High',
+    ->  'Battery drains quickly during gaming'),
+    ->
+    -> (5, '2026-08-24', 'Unexpected Shutdown', 'High',
+    ->  'Device shuts down when battery percentage is low');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+INSEERT INTO BATTERY_HEALTH
+======================================
+
+mysql> INSERT INTO battery_health
+    -> (device_id, check_date, health_percentage, maximum_capacity_mAh,
+    ->  charging_cycles, health_status)
+    -> VALUES
+    -> (1, '2026-08-20', 96.50, 7045, 85, 'Excellent'),
+    -> (1, '2026-08-24', 95.80, 7000, 100, 'Excellent'),
+    ->
+    -> (2, '2026-08-20', 91.20, 3648, 180, 'Good'),
+    -> (2, '2026-08-24', 90.50, 3620, 195, 'Good'),
+    ->
+    -> (3, '2026-08-20', 88.70, 2971, 250, 'Good'),
+    -> (3, '2026-08-24', 87.90, 2945, 265, 'Good'),
+    ->
+    -> (4, '2026-08-20', 93.40, 5137, 150, 'Good'),
+    -> (4, '2026-08-24', 92.60, 5093, 165, 'Good'),
+    ->
+    -> (5, '2026-08-20', 85.30, 3911, 320, 'Average'),
+    -> (5, '2026-08-24', 84.60, 3879, 335, 'Average');
+Query OK, 10 rows affected (0.01 sec)
+Records: 10  Duplicates: 0  Warnings: 0
+
+INSERRT INTO APP_USAGE
+==========================================
+
+mysql> INSERT INTO app_usage
+    -> (device_id, usage_date, app_name, usage_minutes, battery_consumed_percentage)
+    -> VALUES
+    -> (1, '2026-08-20', 'YouTube', 120, 18.00),
+    -> (1, '2026-08-20', 'Instagram', 90, 12.00),
+    -> (1, '2026-08-20', 'WhatsApp', 60, 6.00),
+    -> (1, '2026-08-20', 'BGMI', 150, 25.00),
+    ->
+    -> (2, '2026-08-20', 'YouTube', 100, 15.00),
+    -> (2, '2026-08-20', 'Instagram', 80, 11.00),
+    -> (2, '2026-08-20', 'WhatsApp', 70, 7.00),
+    ->
+    -> (3, '2026-08-20', 'YouTube', 90, 13.00),
+    -> (3, '2026-08-20', 'Instagram', 110, 15.00),
+    -> (3, '2026-08-20', 'WhatsApp', 65, 6.00),
+    ->
+    -> (4, '2026-08-20', 'BGMI', 130, 22.00),
+    -> (4, '2026-08-20', 'YouTube', 100, 15.00),
+    -> (4, '2026-08-20', 'Instagram', 85, 11.00),
+    ->
+    -> (5, '2026-08-20', 'YouTube', 80, 12.00),
+    -> (5, '2026-08-20', 'Instagram', 75, 10.00),
+    -> (5, '2026-08-20', 'WhatsApp', 90, 8.00);
+Query OK, 16 rows affected (0.01 sec)
+Records: 16  Duplicates: 0  Warnings: 0
+=======================================================================================================================================================================================================================================
+
+
+================================================================
+<------------------DISPLAY ALL TABLES--------------->
+================================================================
+
+
+mysql> select * from users;
++---------+--------+------------------+------------+--------+------------+
+| user_id | name   | email            | phone      | gender | join_date  |
++---------+--------+------------------+------------+--------+------------+
+|       1 | Dinesh | dinesh@gmail.com | 9876543210 | Male   | 2026-08-01 |
+|       2 | Rahul  | rahul@gmail.com  | 9876543211 | Male   | 2026-08-02 |
+|       3 | Priya  | priya@gmail.com  | 9876543212 | Female | 2026-08-03 |
+|       4 | Arjun  | arjun@gmail.com  | 9876543213 | Male   | 2026-08-04 |
+|       5 | Sneha  | sneha@gmail.com  | 9876543214 | Female | 2026-08-05 |
++---------+--------+------------------+------------+--------+------------+
+5 rows in set (0.00 sec)
+
+
+mysql> select * from app_usage;
++--------------+-----------+------------+-----------+---------------+-----------------------------+
+| app_usage_id | device_id | usage_date | app_name  | usage_minutes | battery_consumed_percentage |
++--------------+-----------+------------+-----------+---------------+-----------------------------+
+|            1 |         1 | 2026-08-20 | YouTube   |           120 |                       18.00 |
+|            2 |         1 | 2026-08-20 | Instagram |            90 |                       12.00 |
+|            3 |         1 | 2026-08-20 | WhatsApp  |            60 |                        6.00 |
+|            4 |         1 | 2026-08-20 | BGMI      |           150 |                       25.00 |
+|            5 |         2 | 2026-08-20 | YouTube   |           100 |                       15.00 |
+|            6 |         2 | 2026-08-20 | Instagram |            80 |                       11.00 |
+|            7 |         2 | 2026-08-20 | WhatsApp  |            70 |                        7.00 |
+|            8 |         3 | 2026-08-20 | YouTube   |            90 |                       13.00 |
+|            9 |         3 | 2026-08-20 | Instagram |           110 |                       15.00 |
+|           10 |         3 | 2026-08-20 | WhatsApp  |            65 |                        6.00 |
+|           11 |         4 | 2026-08-20 | BGMI      |           130 |                       22.00 |
+|           12 |         4 | 2026-08-20 | YouTube   |           100 |                       15.00 |
+|           13 |         4 | 2026-08-20 | Instagram |            85 |                       11.00 |
+|           14 |         5 | 2026-08-20 | YouTube   |            80 |                       12.00 |
+|           15 |         5 | 2026-08-20 | Instagram |            75 |                       10.00 |
+|           16 |         5 | 2026-08-20 | WhatsApp  |            90 |                        8.00 |
++--------------+-----------+------------+-----------+---------------+-----------------------------+
+16 rows in set (0.00 sec)
+
+
+mysql> select*from battery_health;
++-----------+-----------+------------+-------------------+----------------------+-----------------+---------------+
+| health_id | device_id | check_date | health_percentage | maximum_capacity_mAh | charging_cycles | health_status |
++-----------+-----------+------------+-------------------+----------------------+-----------------+---------------+
+|         1 |         1 | 2026-08-20 |             96.50 |                 7045 |              85 | Excellent     |
+|         2 |         1 | 2026-08-24 |             95.80 |                 7000 |             100 | Excellent     |
+|         3 |         2 | 2026-08-20 |             91.20 |                 3648 |             180 | Good          |
+|         4 |         2 | 2026-08-24 |             90.50 |                 3620 |             195 | Good          |
+|         5 |         3 | 2026-08-20 |             88.70 |                 2971 |             250 | Good          |
+|         6 |         3 | 2026-08-24 |             87.90 |                 2945 |             265 | Good          |
+|         7 |         4 | 2026-08-20 |             93.40 |                 5137 |             150 | Good          |
+|         8 |         4 | 2026-08-24 |             92.60 |                 5093 |             165 | Good          |
+|         9 |         5 | 2026-08-20 |             85.30 |                 3911 |             320 | Average       |
+|        10 |         5 | 2026-08-24 |             84.60 |                 3879 |             335 | Average       |
++-----------+-----------+------------+-------------------+----------------------+-----------------+---------------+
+10 rows in set (0.00 sec)
+
+
+mysql> select * from charging_sessions;
++-------------+-----------+---------------+------------------+----------------+---------------------------+---------------+
+| charging_id | device_id | charging_date | start_percentage | end_percentage | charging_duration_minutes | charging_type |
++-------------+-----------+---------------+------------------+----------------+---------------------------+---------------+
+|           1 |         1 | 2026-08-20    |               20 |             90 |                        55 | Fast          |
+|           2 |         1 | 2026-08-21    |               15 |             85 |                        52 | Fast          |
+|           3 |         1 | 2026-08-22    |               20 |             80 |                        50 | Fast          |
+|           4 |         2 | 2026-08-20    |               30 |             90 |                        70 | Normal        |
+|           5 |         2 | 2026-08-21    |               25 |             85 |                        68 | Normal        |
+|           6 |         3 | 2026-08-20    |               35 |             95 |                        80 | Fast          |
+|           7 |         3 | 2026-08-21    |               40 |             90 |                        75 | Fast          |
+|           8 |         4 | 2026-08-20    |               20 |             90 |                        60 | Fast          |
+|           9 |         4 | 2026-08-21    |               15 |             85 |                        58 | Fast          |
+|          10 |         5 | 2026-08-20    |               25 |             90 |                        75 | Normal        |
++-------------+-----------+---------------+------------------+----------------+---------------------------+---------------+
+10 rows in set (0.00 sec)
+
+
+mysql> select * from battery_usage;
++----------+-----------+------------+---------------+-------------+-------------------+------------------+
+| usage_id | device_id | usage_date | battery_start | battery_end | screen_time_hours | battery_consumed |
++----------+-----------+------------+---------------+-------------+-------------------+------------------+
+|        1 |         1 | 2026-08-20 |           100 |          30 |              7.50 |               70 |
+|        2 |         1 | 2026-08-21 |           100 |          25 |              8.20 |               75 |
+|        3 |         1 | 2026-08-22 |            95 |          20 |              8.00 |               75 |
+|        4 |         2 | 2026-08-20 |           100 |          40 |              6.00 |               60 |
+|        5 |         2 | 2026-08-21 |           100 |          35 |              6.50 |               65 |
+|        6 |         3 | 2026-08-20 |           100 |          45 |              5.50 |               55 |
+|        7 |         3 | 2026-08-21 |           100 |          40 |              6.00 |               60 |
+|        8 |         4 | 2026-08-20 |           100 |          30 |              7.00 |               70 |
+|        9 |         4 | 2026-08-21 |           100 |          25 |              7.80 |               75 |
+|       10 |         5 | 2026-08-20 |           100 |          35 |              6.20 |               65 |
++----------+-----------+------------+---------------+-------------+-------------------+------------------+
+10 rows in set (0.00 sec)
+
+
+mysql> select*from mobile_devices;
++-----------+---------+---------+------------+---------+---------------+----------------------+-------+---------------+
+| device_id | user_id | brand   | model      | os_type | purchase_date | battery_capacity_mAh | color | serial_number |
++-----------+---------+---------+------------+---------+---------------+----------------------+-------+---------------+
+|         1 |       1 | iQOO    | Z10        | Android | 2026-01-15    |                 7300 | Black | IQZ10SN001    |
+|         2 |       2 | Samsung | Galaxy S24 | Android | 2025-12-10    |                 4000 | Blue  | SGS24SN002    |
+|         3 |       3 | Apple   | iPhone 15  | iOS     | 2025-11-20    |                 3349 | Pink  | IPH15SN003    |
+|         4 |       4 | OnePlus | 12R        | Android | 2026-02-05    |                 5500 | Grey  | OP12RSN004    |
+|         5 |       5 | Google  | Pixel 8    | Android | 2025-10-15    |                 4575 | Hazel | GP8SN005      |
++-----------+---------+---------+------------+---------+---------------+----------------------+-------+---------------+
+5 rows in set (0.00 sec)
+
+
+mysql> SELECT*FROM BATTERY_ISSUES;
++----------+-----------+------------+---------------------+----------+----------------------------------------------------------+
+| issue_id | device_id | issue_date | issue_type          | severity | description                                              |
++----------+-----------+------------+---------------------+----------+----------------------------------------------------------+
+|        1 |         1 | 2026-08-20 | Fast Battery Drain  | Medium   | Battery percentage decreases quickly during normal usage |
+|        2 |         2 | 2026-08-21 | Overheating         | High     | Device becomes hot during charging                       |
+|        3 |         3 | 2026-08-22 | Slow Charging       | Medium   | Charging takes longer than expected                      |
+|        4 |         4 | 2026-08-23 | Fast Battery Drain  | High     | Battery drains quickly during gaming                     |
+|        5 |         5 | 2026-08-24 | Unexpected Shutdown | High     | Device shuts down when battery percentage is low         |
++----------+-----------+------------+---------------------+----------+----------------------------------------------------------+
+5 rows in set (0.00 sec)
+
+
+=========================================================================================================================================================================================================================================
+
+========================================================================
+<------------------SMALL QUERIES---------------------->
+========================================================================
+
+--->Q1. Display all users.
+--------------------------
+
+mysql> SELECT *
+    -> FROM users;
++---------+--------+------------------+------------+--------+------------+
+| user_id | name   | email            | phone      | gender | join_date  |
++---------+--------+------------------+------------+--------+------------+
+|       1 | Dinesh | dinesh@gmail.com | 9876543210 | Male   | 2026-08-01 |
+|       2 | Rahul  | rahul@gmail.com  | 9876543211 | Male   | 2026-08-02 |
+|       3 | Priya  | priya@gmail.com  | 9876543212 | Female | 2026-08-03 |
+|       4 | Arjun  | arjun@gmail.com  | 9876543213 | Male   | 2026-08-04 |
+|       5 | Sneha  | sneha@gmail.com  | 9876543214 | Female | 2026-08-05 |
++---------+--------+------------------+------------+--------+------------+
+5 rows in set (0.00 sec)
+
+
+--->Q2. Display all mobile devices.
+-----------------------------------
+
+mysql> SELECT *
+    -> FROM mobile_devices;
++-----------+---------+---------+------------+---------+---------------+----------------------+-------+---------------+
+| device_id | user_id | brand   | model      | os_type | purchase_date | battery_capacity_mAh | color | serial_number |
++-----------+---------+---------+------------+---------+---------------+----------------------+-------+---------------+
+|         1 |       1 | iQOO    | Z10        | Android | 2026-01-15    |                 7300 | Black | IQZ10SN001    |
+|         2 |       2 | Samsung | Galaxy S24 | Android | 2025-12-10    |                 4000 | Blue  | SGS24SN002    |
+|         3 |       3 | Apple   | iPhone 15  | iOS     | 2025-11-20    |                 3349 | Pink  | IPH15SN003    |
+|         4 |       4 | OnePlus | 12R        | Android | 2026-02-05    |                 5500 | Grey  | OP12RSN004    |
+|         5 |       5 | Google  | Pixel 8    | Android | 2025-10-15    |                 4575 | Hazel | GP8SN005      |
++-----------+---------+---------+------------+---------+---------------+----------------------+-------+---------------+
+5 rows in set (0.00 sec)
+
+--->Q3. Find phones with battery health below 90%.
+---------------------------------------------------
+
+mysql> SELECT device_id, health_percentage, health_status
+    -> FROM battery_health
+    -> WHERE health_percentage < 90;
++-----------+-------------------+---------------+
+| device_id | health_percentage | health_status |
++-----------+-------------------+---------------+
+|         3 |             88.70 | Good          |
+|         3 |             87.90 | Good          |
+|         5 |             85.30 | Average       |
+|         5 |             84.60 | Average       |
++-----------+-------------------+---------------+
+4 rows in set (0.00 sec)
+
+--->Q4. Find the highest battery health.
+---------------------------------------------------
+
+mysql> SELECT MAX(health_percentage) AS highest_battery_health
+    -> FROM battery_health;
++------------------------+
+| highest_battery_health |
++------------------------+
+|                  96.50 |
++------------------------+
+1 row in set (0.01 sec)
+
+
+--->Q5. Find the lowest battery health.
+---------------------------------------
+
+mysql> SELECT MIN(health_percentage) AS lowest_battery_health
+    -> FROM battery_health;
++-----------------------+
+| lowest_battery_health |
++-----------------------+
+|                 84.60 |
++-----------------------+
+1 row in set (0.00 sec)
+
+--->Q6. Find average screen time.
+---------------------------------------
+
+mysql> SELECT AVG(screen_time_hours) AS average_screen_time
+    -> FROM battery_usage;
++---------------------+
+| average_screen_time |
++---------------------+
+|            6.870000 |
++---------------------+
+1 row in set (0.00 sec)
+
+--->Q7. Find total charging sessions.
+---------------------------------------
+
+mysql> SELECT COUNT(*) AS total_charging_sessions
+    -> FROM charging_sessions;
++-------------------------+
+| total_charging_sessions |
++-------------------------+
+|                      10 |
++-------------------------+
+1 row in set (0.00 sec)
+
+--->Q8. Find apps consuming more than 15% battery.
+----------------------------------------------------
+
+mysql> SELECT app_name, battery_consumed_percentage
+    -> FROM app_usage
+    -> WHERE battery_consumed_percentage > 15;
++----------+-----------------------------+
+| app_name | battery_consumed_percentage |
++----------+-----------------------------+
+| YouTube  |                       18.00 |
+| BGMI     |                       25.00 |
+| BGMI     |                       22.00 |
++----------+-----------------------------+
+3 rows in set (0.00 sec)
+
+--->Q9. Find phones with more than 200 charging cycles.
+--------------------------------------------------------
+
+mysql> SELECT device_id, charging_cycles
+    -> FROM battery_health
+    -> WHERE charging_cycles > 200;
++-----------+-----------------+
+| device_id | charging_cycles |
++-----------+-----------------+
+|         3 |             250 |
+|         3 |             265 |
+|         5 |             320 |
+|         5 |             335 |
++-----------+-----------------+
+4 rows in set (0.00 sec)
+
+
+--->Q10. Display all battery issues.
+---------------------------------------
+
+mysql> SELECT *
+    -> FROM battery_issues;
++----------+-----------+------------+---------------------+----------+----------------------------------------------------------+
+| issue_id | device_id | issue_date | issue_type          | severity | description                                              |
++----------+-----------+------------+---------------------+----------+----------------------------------------------------------+
+|        1 |         1 | 2026-08-20 | Fast Battery Drain  | Medium   | Battery percentage decreases quickly during normal usage |
+|        2 |         2 | 2026-08-21 | Overheating         | High     | Device becomes hot during charging                       |
+|        3 |         3 | 2026-08-22 | Slow Charging       | Medium   | Charging takes longer than expected                      |
+|        4 |         4 | 2026-08-23 | Fast Battery Drain  | High     | Battery drains quickly during gaming                     |
+|        5 |         5 | 2026-08-24 | Unexpected Shutdown | High     | Device shuts down when battery percentage is low         |
++----------+-----------+------------+---------------------+----------+----------------------------------------------------------+
+5 rows in set (0.00 sec)
+
+===========================================================================================================================================================================================================================================
+
+=========================================================================
+<------------------MEDIUM QUERIES----------------->
+=========================================================================
+
+--->Q1. Display users with their mobile details.= JOIN
+------------------------------------------------------
+
+mysql> SELECT
+    ->     u.name,
+    ->     m.brand,
+    ->     m.model,
+    ->     m.os_type,
+    ->     m.battery_capacity_mAh
+    -> FROM users u
+    -> JOIN mobile_devices m
+    ->     ON u.user_id = m.user_id;
++--------+---------+------------+---------+----------------------+
+| name   | brand   | model      | os_type | battery_capacity_mAh |
++--------+---------+------------+---------+----------------------+
+| Dinesh | iQOO    | Z10        | Android |                 7300 |
+| Rahul  | Samsung | Galaxy S24 | Android |                 4000 |
+| Priya  | Apple   | iPhone 15  | iOS     |                 3349 |
+| Arjun  | OnePlus | 12R        | Android |                 5500 |
+| Sneha  | Google  | Pixel 8    | Android |                 4575 |
++--------+---------+------------+---------+----------------------+
+5 rows in set (0.00 sec)
+
+
+--->Q2. Find the average battery health of each mobile brand = JOIN + GROUP BY + AVG
+-------------------------------------------------------------------------------------
+
+mysql> SELECT
+    ->     m.brand,
+    ->     ROUND(AVG(bh.health_percentage), 2) AS average_battery_health
+    -> FROM mobile_devices m
+    -> JOIN battery_health bh
+    ->     ON m.device_id = bh.device_id
+    -> GROUP BY m.brand;
++---------+------------------------+
+| brand   | average_battery_health |
++---------+------------------------+
+| iQOO    |                  96.15 |
+| Samsung |                  90.85 |
+| Apple   |                  88.30 |
+| OnePlus |                  93.00 |
+| Google  |                  84.95 |
++---------+------------------------+
+5 rows in set (0.01 sec)
+
+
+--->Q3. Find the total charging sessions for each mobile = JOIN + COUNT + GROUP BY
+-------------------------------------------------------------------------------------
+
+mysql> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     COUNT(cs.charging_id) AS total_charging_sessions
+    -> FROM mobile_devices m
+    -> JOIN charging_sessions cs
+    ->     ON m.device_id = cs.device_id
+    -> GROUP BY m.device_id, m.brand, m.model;
++---------+------------+-------------------------+
+| brand   | model      | total_charging_sessions |
++---------+------------+-------------------------+
+| iQOO    | Z10        |                       3 |
+| Samsung | Galaxy S24 |                       2 |
+| Apple   | iPhone 15  |                       2 |
+| OnePlus | 12R        |                       2 |
+| Google  | Pixel 8    |                       1 |
++---------+------------+-------------------------+
+5 rows in set (0.00 sec)
+
+
+--->Q4. Find apps that consume more than 10% battery on average = GROUP BY + AVG + HAVING
+-----------------------------------------------------------------------------------------
+
+mysql> SELECT
+    ->     app_name,
+    ->     ROUND(AVG(battery_consumed_percentage), 2) AS average_battery_consumption
+    -> FROM app_usage
+    -> GROUP BY app_name
+    -> HAVING AVG(battery_consumed_percentage) > 10;
++-----------+-----------------------------+
+| app_name  | average_battery_consumption |
++-----------+-----------------------------+
+| YouTube   |                       14.60 |
+| Instagram |                       11.80 |
+| BGMI      |                       23.50 |
++-----------+-----------------------------+
+3 rows in set (0.00 sec)
+
+
+--->Q5. Find mobiles with more than 200 charging cycles = Concept: JOIN + WHERE
+--------------------------------------------------------------------------------
+
+mysql> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     bh.charging_cycles,
+    ->     bh.health_percentage
+    -> FROM mobile_devices m
+    -> JOIN battery_health bh
+    ->     ON m.device_id = bh.device_id
+    -> WHERE bh.charging_cycles > 200;
++--------+-----------+-----------------+-------------------+
+| brand  | model     | charging_cycles | health_percentage |
++--------+-----------+-----------------+-------------------+
+| Apple  | iPhone 15 |             250 |             88.70 |
+| Apple  | iPhone 15 |             265 |             87.90 |
+| Google | Pixel 8   |             320 |             85.30 |
+| Google | Pixel 8   |             335 |             84.60 |
++--------+-----------+-----------------+-------------------+
+4 rows in set (0.00 sec)
+
+===========================================================================================================================================================================================================================================
+
+=====================================================================================
+<----------------- LARGE/ADVANCED QUERIES-------------------->
+=====================================================================================
+
+--->Q1. Find phones whose battery health is below the overall average.
+------------------------------------------------------------------------
+
+mysql> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     bh.health_percentage,
+    ->     bh.charging_cycles
+    -> FROM mobile_devices m
+    -> JOIN battery_health bh
+    ->     ON m.device_id = bh.device_id
+    -> WHERE bh.health_percentage < (
+    ->     SELECT AVG(health_percentage)
+    ->     FROM battery_health
+    -> );
++---------+------------+-------------------+-----------------+
+| brand   | model      | health_percentage | charging_cycles |
++---------+------------+-------------------+-----------------+
+| Samsung | Galaxy S24 |             90.50 |             195 |
+| Apple   | iPhone 15  |             88.70 |             250 |
+| Apple   | iPhone 15  |             87.90 |             265 |
+| Google  | Pixel 8    |             85.30 |             320 |
+| Google  | Pixel 8    |             84.60 |             335 |
++---------+------------+-------------------+-----------------+
+5 rows in set (0.01 sec)
+
+--->Q2. Rank phones based on battery health
+---------------------------------------------
+
+mysql> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     bh.health_percentage,
+    ->     RANK() OVER (
+    ->         ORDER BY bh.health_percentage DESC
+    ->     ) AS battery_health_rank
+    -> FROM mobile_devices m
+    -> JOIN battery_health bh
+    ->     ON m.device_id = bh.device_id;
++---------+------------+-------------------+---------------------+
+| brand   | model      | health_percentage | battery_health_rank |
++---------+------------+-------------------+---------------------+
+| iQOO    | Z10        |             96.50 |                   1 |
+| iQOO    | Z10        |             95.80 |                   2 |
+| OnePlus | 12R        |             93.40 |                   3 |
+| OnePlus | 12R        |             92.60 |                   4 |
+| Samsung | Galaxy S24 |             91.20 |                   5 |
+| Samsung | Galaxy S24 |             90.50 |                   6 |
+| Apple   | iPhone 15  |             88.70 |                   7 |
+| Apple   | iPhone 15  |             87.90 |                   8 |
+| Google  | Pixel 8    |             85.30 |                   9 |
+| Google  | Pixel 8    |             84.60 |                  10 |
++---------+------------+-------------------+---------------------+
+10 rows in set (0.00 sec)
+
+--->Q3. Identify phones with high charging cycles and poor battery health
+---------------------------------------------------------------------------
+
+mysql> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     bh.charging_cycles,
+    ->     bh.health_percentage,
+    ->     CASE
+    ->         WHEN bh.charging_cycles >= 300
+    ->              AND bh.health_percentage < 85
+    ->             THEN 'High Degradation'
+    ->
+    ->         WHEN bh.charging_cycles >= 200
+    ->              AND bh.health_percentage < 90
+    ->             THEN 'Moderate Degradation'
+    ->
+    ->         ELSE 'Normal'
+    ->     END AS battery_condition
+    -> FROM mobile_devices m
+    -> JOIN battery_health bh
+    ->     ON m.device_id = bh.device_id
+    -> ORDER BY bh.charging_cycles DESC;
++---------+------------+-----------------+-------------------+----------------------+
+| brand   | model      | charging_cycles | health_percentage | battery_condition    |
++---------+------------+-----------------+-------------------+----------------------+
+| Google  | Pixel 8    |             335 |             84.60 | High Degradation     |
+| Google  | Pixel 8    |             320 |             85.30 | Moderate Degradation |
+| Apple   | iPhone 15  |             265 |             87.90 | Moderate Degradation |
+| Apple   | iPhone 15  |             250 |             88.70 | Moderate Degradation |
+| Samsung | Galaxy S24 |             195 |             90.50 | Normal               |
+| Samsung | Galaxy S24 |             180 |             91.20 | Normal               |
+| OnePlus | 12R        |             165 |             92.60 | Normal               |
+| OnePlus | 12R        |             150 |             93.40 | Normal               |
+| iQOO    | Z10        |             100 |             95.80 | Normal               |
+| iQOO    | Z10        |              85 |             96.50 | Normal               |
++---------+------------+-----------------+-------------------+----------------------+
+10 rows in set (0.00 sec)
+
+--->Q4. Find the most battery-consuming application
+----------------------------------------------------
+
+
+mysql> WITH app_consumption AS (
+    ->     SELECT
+    ->         app_name,
+    ->         SUM(battery_consumed_percentage) AS total_battery_consumption
+    ->     FROM app_usage
+    ->     GROUP BY app_name
+    -> )
+    -> SELECT
+    ->     app_name,
+    ->     total_battery_consumption
+    -> FROM app_consumption
+    -> ORDER BY total_battery_consumption DESC
+    -> LIMIT 1;
++----------+---------------------------+
+| app_name | total_battery_consumption |
++----------+---------------------------+
+| YouTube  |                     73.00 |
++----------+---------------------------+
+1 row in set (0.01 sec)
+
+--->Q5. Find the phone with the highest battery consumption and display its health
+------------------------------------------------------------------------------------
+
+
+mysql> WITH device_consumption AS (
+    ->     SELECT
+    ->         device_id,
+    ->         SUM(battery_consumed) AS total_battery_consumption
+    ->     FROM battery_usage
+    ->     GROUP BY device_id
+    -> )
+    -> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     dc.total_battery_consumption,
+    ->     bh.health_percentage,
+    ->     bh.charging_cycles
+    -> FROM device_consumption dc
+    -> JOIN mobile_devices m
+    ->     ON dc.device_id = m.device_id
+    -> JOIN battery_health bh
+    ->     ON dc.device_id = bh.device_id
+    -> ORDER BY dc.total_battery_consumption DESC
+    -> LIMIT 1;
++-------+-------+---------------------------+-------------------+-----------------+
+| brand | model | total_battery_consumption | health_percentage | charging_cycles |
++-------+-------+---------------------------+-------------------+-----------------+
+| iQOO  | Z10   |                       220 |             96.50 |              85 |
++-------+-------+---------------------------+-------------------+-----------------+
+1 row in set (0.00 sec)
+
+
+===========================================================================================================================================================================================================================================
+
+=======================================================================================================================
+<-------------------------FINAL QUERY — Overall Battery Performance Analysis------------------------------>
+=======================================================================================================================
+
+Question:
+--->Which mobile has the best overall battery performance based on battery health, charging cycles, battery consumption, and reported issues?
+
+mysql> SELECT
+    ->     m.brand,
+    ->     m.model,
+    ->     bh.health_percentage,
+    ->     bh.charging_cycles,
+    ->     SUM(bu.battery_consumed) AS total_battery_consumed,
+    ->     COUNT(DISTINCT bi.issue_id) AS total_battery_issues,
+    ->
+    ->     CASE
+    ->         WHEN bh.health_percentage >= 90
+    ->              AND bh.charging_cycles < 200
+    ->              AND COUNT(DISTINCT bi.issue_id) = 0
+    ->             THEN 'Excellent'
+    ->
+    ->         WHEN bh.health_percentage >= 80
+    ->              AND bh.charging_cycles < 300
+    ->             THEN 'Good'
+    ->
+    ->         WHEN bh.health_percentage >= 70
+    ->             THEN 'Average'
+    ->
+    ->         ELSE 'Poor'
+    ->     END AS overall_battery_performance
+    ->
+    -> FROM mobile_devices m
+    ->
+    -> JOIN battery_health bh
+    ->     ON m.device_id = bh.device_id
+    ->
+    -> JOIN battery_usage bu
+    ->     ON m.device_id = bu.device_id
+    ->
+    -> LEFT JOIN battery_issues bi
+    ->     ON m.device_id = bi.device_id
+    ->
+    -> GROUP BY
+    ->     m.device_id,
+    ->     m.brand,
+    ->     m.model,
+    ->     bh.health_percentage,
+    ->     bh.charging_cycles
+    ->
+    -> ORDER BY
+    ->     bh.health_percentage DESC,
+    ->     total_battery_issues ASC;
++---------+------------+-------------------+-----------------+------------------------+----------------------+-----------------------------+
+| brand   | model      | health_percentage | charging_cycles | total_battery_consumed | total_battery_issues | overall_battery_performance |
++---------+------------+-------------------+-----------------+------------------------+----------------------+-----------------------------+
+| iQOO    | Z10        |             96.50 |              85 |                    220 |                    1 | Good                        |
+| iQOO    | Z10        |             95.80 |             100 |                    220 |                    1 | Good                        |
+| OnePlus | 12R        |             93.40 |             150 |                    145 |                    1 | Good                        |
+| OnePlus | 12R        |             92.60 |             165 |                    145 |                    1 | Good                        |
+| Samsung | Galaxy S24 |             91.20 |             180 |                    125 |                    1 | Good                        |
+| Samsung | Galaxy S24 |             90.50 |             195 |                    125 |                    1 | Good                        |
+| Apple   | iPhone 15  |             88.70 |             250 |                    115 |                    1 | Good                        |
+| Apple   | iPhone 15  |             87.90 |             265 |                    115 |                    1 | Good                        |
+| Google  | Pixel 8    |             85.30 |             320 |                     65 |                    1 | Average                     |
+| Google  | Pixel 8    |             84.60 |             335 |                     65 |                    1 | Average                     |
++---------+------------+-------------------+-----------------+------------------------+----------------------+-----------------------------+
+10 rows in set (0.01 sec)
+
+
+
